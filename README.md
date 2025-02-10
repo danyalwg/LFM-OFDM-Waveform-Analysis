@@ -52,16 +52,8 @@ This tool is ideal for researchers, engineers, and industry professionals workin
   - Provides multiple plots including time-domain waveforms, range profiles, 3D ambiguity functions, and KPI bar charts.
 
 ## Project Structure
-- **main.py:**  
+- **joint_waveform_gui _v3.py:**  
   Contains the complete PyQt5 application code, including waveform generation, combination, performance analysis, and SDR transmission.
-- **README.md:**  
-  This detailed documentation file.
-- **requirements.txt:**  
-  A list of required Python packages for easy setup.
-- **docs/** (optional):  
-  Additional documentation, technical notes, and user manuals.
-- **assets/** (optional):  
-  Screenshots, diagrams, and other supporting files.
 
 ## Prerequisites
 - **Python 3.7 or Higher**
@@ -91,11 +83,6 @@ It is recommended to create a virtual environment. Then install the required lib
 pip3 install numpy matplotlib scipy PyQt5 qdarkstyle adi iio
 ```
 
-If a `requirements.txt` file is provided, install all dependencies with:
-
-```
-pip3 install -r requirements.txt
-```
 
 ### Pluto SDR Driver Installation
 For the ADALM-Pluto SDR integration, you must install the appropriate drivers. Please follow the official instructions for Windows:
@@ -110,7 +97,7 @@ Make sure to check system requirements and installation guidelines on the offici
 After completing the installation, launch the application by executing:
 
 ```
-python3 main.py
+python "joint_waveform_gui _v3.py"
 ```
 
 This will open the main window of the application, giving you access to waveform generation, performance analysis, and SDR transmission functionalities.
