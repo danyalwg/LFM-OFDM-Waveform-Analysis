@@ -15,6 +15,7 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        self.amb_colorbar = None
         self.setWindowTitle("LFM + OFDM Waveform Generation and Analysis")
         self.lfm_time = None
         self.lfm_waveform = None
@@ -27,7 +28,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.continuous_transmission)
 
         self.setup_ui()
-        # Pluto parameters remain on the main page
 
     def setup_ui(self):
         # Central widget and main layout
@@ -51,8 +51,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setup_waveform_tab(self):
         layout = QtWidgets.QVBoxLayout(self.tab_waveform)
-
-        # Create a 2x2 grid for parameter groups
         grid = QtWidgets.QGridLayout()
 
         # --- LFM Parameters Group ---
@@ -164,7 +162,7 @@ class MainWindow(QtWidgets.QMainWindow):
         joint_plot_layout = QtWidgets.QVBoxLayout(self.tab_joint_plot)
         joint_plot_layout.addWidget(self.canvas_joint)
 
-        # Pluto Received Signal Plot Tab (added among the main plots)
+        # Pluto Received Signal Plot Tab
         self.tab_pluto_received = QtWidgets.QWidget()
         self.waveform_plot_tabs.addTab(self.tab_pluto_received, "Pluto Received")
         self.fig_pluto, self.ax_pluto = plt.subplots(figsize=(5, 3))
@@ -174,9 +172,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setup_performance_tab(self):
         layout = QtWidgets.QVBoxLayout(self.tab_performance)
-        # Create a tab widget for performance plots
         self.perf_tabs = QtWidgets.QTabWidget()
         layout.addWidget(self.perf_tabs)
+
         # Range Profile Tab
         self.tab_range = QtWidgets.QWidget()
         self.perf_tabs.addTab(self.tab_range, "Range Profile")
@@ -184,6 +182,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas_range = FigureCanvas(self.fig_range)
         range_layout = QtWidgets.QVBoxLayout(self.tab_range)
         range_layout.addWidget(self.canvas_range)
+
         # Ambiguity Function Tab (3D Plot)
         self.tab_ambiguity = QtWidgets.QWidget()
         self.perf_tabs.addTab(self.tab_ambiguity, "Ambiguity Function")
@@ -192,16 +191,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas_amb = FigureCanvas(self.fig_amb)
         amb_layout = QtWidgets.QVBoxLayout(self.tab_ambiguity)
         amb_layout.addWidget(self.canvas_amb)
-        # KPI Tab with separate sub-tabs for each KPI
+
+        # KPI Tab with grid layout for all KPIs
         self.tab_kpis = QtWidgets.QWidget()
         self.perf_tabs.addTab(self.tab_kpis, "KPIs")
-        kpi_layout = QtWidgets.QVBoxLayout(self.tab_kpis)
-        self.kpi_tabs = QtWidgets.QTabWidget()
-        kpi_layout.addWidget(self.kpi_tabs)
-        # Signal-to-Noise Ratio Tab
-        self.tab_snr = QtWidgets.QWidget()
-        self.kpi_tabs.addTab(self.tab_snr, "Signal-to-Noise Ratio")
-        snr_layout = QtWidgets.QVBoxLayout(self.tab_snr)
+        kpi_grid = QtWidgets.QGridLayout(self.tab_kpis)
+
+        # Signal-to-Noise Ratio (SNR)
+        snr_widget = QtWidgets.QWidget()
+        snr_layout = QtWidgets.QVBoxLayout(snr_widget)
         self.snr_label = QtWidgets.QLabel("")
         self.snr_label.setStyleSheet("font-size: 20pt;")
         self.snr_label.setMaximumHeight(40)
@@ -209,10 +207,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fig_snr, self.ax_snr = plt.subplots(figsize=(4, 3))
         self.snr_canvas = FigureCanvas(self.fig_snr)
         snr_layout.addWidget(self.snr_canvas)
-        # Peak-to-Side Lobe Ratio Tab
-        self.tab_pslr = QtWidgets.QWidget()
-        self.kpi_tabs.addTab(self.tab_pslr, "Peak-to-Side Lobe Ratio")
-        pslr_layout = QtWidgets.QVBoxLayout(self.tab_pslr)
+        kpi_grid.addWidget(snr_widget, 0, 0)
+
+        # Peak-to-Side Lobe Ratio (PSLR)
+        pslr_widget = QtWidgets.QWidget()
+        pslr_layout = QtWidgets.QVBoxLayout(pslr_widget)
         self.pslr_label = QtWidgets.QLabel("")
         self.pslr_label.setStyleSheet("font-size: 20pt;")
         self.pslr_label.setMaximumHeight(40)
@@ -220,10 +219,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fig_pslr, self.ax_pslr = plt.subplots(figsize=(4, 3))
         self.pslr_canvas = FigureCanvas(self.fig_pslr)
         pslr_layout.addWidget(self.pslr_canvas)
-        # Data Rate Tab
-        self.tab_data_rate = QtWidgets.QWidget()
-        self.kpi_tabs.addTab(self.tab_data_rate, "Data Rate")
-        dr_layout = QtWidgets.QVBoxLayout(self.tab_data_rate)
+        kpi_grid.addWidget(pslr_widget, 0, 1)
+
+        # Data Rate
+        dr_widget = QtWidgets.QWidget()
+        dr_layout = QtWidgets.QVBoxLayout(dr_widget)
         self.data_rate_label = QtWidgets.QLabel("")
         self.data_rate_label.setStyleSheet("font-size: 20pt;")
         self.data_rate_label.setMaximumHeight(40)
@@ -231,10 +231,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fig_data_rate, self.ax_data_rate = plt.subplots(figsize=(4, 3))
         self.data_rate_canvas = FigureCanvas(self.fig_data_rate)
         dr_layout.addWidget(self.data_rate_canvas)
-        # Bit Error Rate Tab
-        self.tab_ber = QtWidgets.QWidget()
-        self.kpi_tabs.addTab(self.tab_ber, "Bit Error Rate")
-        ber_layout = QtWidgets.QVBoxLayout(self.tab_ber)
+        kpi_grid.addWidget(dr_widget, 1, 0)
+
+        # Bit Error Rate (BER)
+        ber_widget = QtWidgets.QWidget()
+        ber_layout = QtWidgets.QVBoxLayout(ber_widget)
         self.ber_label = QtWidgets.QLabel("")
         self.ber_label.setStyleSheet("font-size: 20pt;")
         self.ber_label.setMaximumHeight(40)
@@ -242,10 +243,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fig_ber, self.ax_ber = plt.subplots(figsize=(4, 3))
         self.ber_canvas = FigureCanvas(self.fig_ber)
         ber_layout.addWidget(self.ber_canvas)
-        # Detection Probability Tab
-        self.tab_dp = QtWidgets.QWidget()
-        self.kpi_tabs.addTab(self.tab_dp, "Detection Probability")
-        dp_layout = QtWidgets.QVBoxLayout(self.tab_dp)
+        kpi_grid.addWidget(ber_widget, 1, 1)
+
+        # Detection Probability (DP)
+        dp_widget = QtWidgets.QWidget()
+        dp_layout = QtWidgets.QVBoxLayout(dp_widget)
         self.dp_label = QtWidgets.QLabel("")
         self.dp_label.setStyleSheet("font-size: 20pt;")
         self.dp_label.setMaximumHeight(40)
@@ -253,6 +255,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fig_dp, self.ax_dp = plt.subplots(figsize=(4, 3))
         self.dp_canvas = FigureCanvas(self.fig_dp)
         dp_layout.addWidget(self.dp_canvas)
+        kpi_grid.addWidget(dp_widget, 2, 0, 1, 2)
 
     def modulate_data(self, data, mod_scheme):
         if mod_scheme == "BPSK":
@@ -266,7 +269,6 @@ class MainWindow(QtWidgets.QMainWindow):
             return real_part + 1j * imag_part
         return data
 
-    # Modified generate_ofdm_waveform: now adds a cyclic prefix to each symbol.
     def generate_ofdm_waveform(self, subcarriers, symbols, mod_scheme):
         bits_per_symbol = {"BPSK": 1, "QPSK": 2, "16QAM": 4}[mod_scheme]
         total_bits = subcarriers * symbols * bits_per_symbol
@@ -277,33 +279,28 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception:
             QtWidgets.QMessageBox.critical(self, "Error", "Data reshaping failed. Check input parameters.")
             return None
-        # Calculate cyclic prefix length based on the input percentage
         cp_percent_val = float(self.edit_ofdm_cp.text()) / 100.0
         cp_length = int(cp_percent_val * subcarriers)
         waveform_list = []
         for i in range(symbols):
             symbol_time = ifft(ofdm_symbols[:, i])
             symbol_time = symbol_time / np.max(np.abs(symbol_time))
-            # Cyclic prefix: take last cp_length samples
             cp = symbol_time[-cp_length:]
             symbol_with_cp = np.concatenate((cp, symbol_time))
             waveform_list.append(symbol_with_cp)
         waveform = np.concatenate(waveform_list)
         return waveform
 
-    # Modified combine_waveforms: remove the OFDM cyclic prefix and prepend LFM prefix.
     def combine_waveforms(self, lfm_waveform, ofdm_waveform, cp_percent):
         subcarriers = int(self.edit_ofdm_subcarriers.text())
         cp_length = int(float(self.edit_ofdm_cp.text()) / 100 * subcarriers)
         symbols = len(ofdm_waveform) // (subcarriers + cp_length)
-        # Remove cyclic prefix from each OFDM symbol
         ofdm_no_cp_list = []
         for i in range(symbols):
             start = i * (subcarriers + cp_length) + cp_length
             end = i * (subcarriers + cp_length) + (subcarriers + cp_length)
             ofdm_no_cp_list.append(ofdm_waveform[start:end])
         ofdm_no_cp = np.concatenate(ofdm_no_cp_list)
-        # Use LFM prefix (of length equal to cp_length) instead of OFDM CP
         lfm_prefix = lfm_waveform[:cp_length]
         joint_waveform = np.concatenate((lfm_prefix, ofdm_no_cp))
         return joint_waveform
@@ -331,7 +328,6 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             subcarriers = int(self.edit_ofdm_subcarriers.text())
             symbols = int(self.edit_ofdm_symbols.text())
-            cp_percent = float(self.edit_ofdm_cp.text())
             mod_scheme = self.combo_ofdm_mod.currentText()
         except ValueError:
             QtWidgets.QMessageBox.critical(self, "Error", "Invalid OFDM parameters.")
@@ -342,14 +338,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ofdm_waveform = self.generate_ofdm_waveform(subcarriers, symbols, mod_scheme)
         if self.ofdm_waveform is None:
             return
-        # For simulation, scale the LFM and OFDM waveforms to 0.5
         lfm_scaled = 0.5 * self.lfm_waveform
         ofdm_scaled = 0.5 * self.ofdm_waveform
-
         self.joint_waveform = self.combine_waveforms(lfm_scaled, ofdm_scaled, float(self.edit_ofdm_cp.text()))
-        self.clear_results()  # Clear previous plots
+        self.clear_results()
         self.update_waveform_plots()
-        # For performance analysis, if Pluto was used, use its data
         if self.pluto_received is not None:
             self.joint_waveform = self.pluto_received
 
@@ -364,7 +357,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_lfm.legend()
         self.canvas_lfm.draw()
 
-        # OFDM waveform plot: highlight cyclic prefix in red and the rest in blue
+        # OFDM waveform plot: highlight cyclic prefix (red) and data (blue)
         subcarriers = int(self.edit_ofdm_subcarriers.text())
         cp_percent_val = float(self.edit_ofdm_cp.text())
         cp_length = int(cp_percent_val / 100 * subcarriers)
@@ -382,7 +375,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_ofdm.grid(True)
         self.canvas_ofdm.draw()
 
-        # Joint waveform plot: show LFM prefix (used as CP) in green and the remaining OFDM data in blue
+        # Joint waveform plot: LFM prefix (green) and OFDM data (blue)
         joint = self.joint_waveform
         lfm_part = joint[:cp_length]
         ofdm_part = joint[cp_length:]
@@ -423,138 +416,6 @@ class MainWindow(QtWidgets.QMainWindow):
         mode = self.combo_trans_mode.currentText()
         if mode == "Burst":
             self.generate_and_combine()
-            if mode == "Continuous":
-                # Not used in Burst mode
-                pass
-        elif mode == "Continuous":
-            # Set the timer interval to 5000 ms for continuous simulation
-            self.timer.start(5000)
-        else:
-            QtWidgets.QMessageBox.critical(self, "Error", "Unknown transmission mode.")
-
-    def continuous_transmission(self):
-        self.generate_and_combine()
-        if self.combo_trans_mode.currentText() == "Continuous":
-            self.analyze_performance()
-
-    def stop_transmission(self):
-        self.timer.stop()
-
-    def compute_ambiguity_function(self, t, waveform, fs, analysis_length=1000):
-        t_analysis = t[:analysis_length]
-        waveform_analysis = waveform[:analysis_length]
-        N = len(waveform_analysis)
-        delays = np.arange(-N + 1, N) / fs
-        doppler_shifts = np.linspace(-5000, 5000, 50)
-        ambg = np.zeros((len(doppler_shifts), len(delays)))
-        for i, fd in enumerate(doppler_shifts):
-            waveform_fd = waveform_analysis * np.exp(1j * 2 * np.pi * fd * t_analysis)
-            corr = np.abs(np.correlate(waveform_fd, waveform_analysis, mode='full'))
-            ambg[i, :] = corr / np.max(corr)
-        return doppler_shifts, delays, ambg
-
-    def analyze_performance(self):
-        # Do not clear the main waveform plots; only clear performance plots
-        self.ax_range.cla()
-        self.ax_amb.cla()
-        # Determine which data to analyze: if Pluto data is available, use it; otherwise, use simulated joint waveform.
-        if self.pluto_received is not None:
-            analysis_waveform = self.pluto_received
-        else:
-            analysis_waveform = self.joint_waveform
-
-        # --- Range Profile (Autocorrelation) ---
-        autocorr = np.correlate(analysis_waveform, analysis_waveform, mode='full')
-        lags = np.arange(-len(analysis_waveform) + 1, len(analysis_waveform))
-        self.ax_range.plot(lags, autocorr)
-        self.ax_range.set_title("Range Profile (Autocorrelation)")
-        self.ax_range.set_xlabel("Lag")
-        self.ax_range.set_ylabel("Correlation")
-        self.ax_range.grid(True)
-        self.canvas_range.draw()
-
-        # --- Ambiguity Function (3D Surface Plot) ---
-        fs = 20e6
-        doppler_shifts, delays, ambg = self.compute_ambiguity_function(self.lfm_time, self.lfm_waveform, fs, analysis_length=1000)
-        self.ax_amb.cla()
-        D, F = np.meshgrid(delays, doppler_shifts)
-        surf = self.ax_amb.plot_surface(D, F, ambg, cmap='viridis')
-        self.ax_amb.set_title("Ambiguity Function")
-        self.ax_amb.set_xlabel("Delay (s)")
-        self.ax_amb.set_ylabel("Doppler (Hz)")
-        self.ax_amb.set_zlabel("Correlation")
-        if len(self.fig_amb.axes) > 1:
-            self.fig_amb.delaxes(self.fig_amb.axes[-1])
-        self.fig_amb.colorbar(surf, ax=self.ax_amb, shrink=0.5, aspect=10)
-        self.canvas_amb.draw()
-
-        # --- KPIs ---
-        noise_variance = 0.01
-        signal_power = np.mean(np.abs(analysis_waveform)**2)
-        snr_linear = signal_power / noise_variance
-        snr_db = 10 * np.log10(snr_linear)
-        center_index = len(autocorr) // 2
-        main_peak = autocorr[center_index]
-        sidelobes = np.delete(autocorr, center_index)
-        max_sidelobe = np.max(sidelobes)
-        pslr_db = 20 * np.log10(main_peak / max_sidelobe) if max_sidelobe != 0 else np.inf
-        bits_per_symbol = {"BPSK": 1, "QPSK": 2, "16QAM": 4}[self.combo_ofdm_mod.currentText()]
-        subcarriers = int(self.edit_ofdm_subcarriers.text())
-        symbols_per_sec = float(self.edit_ofdm_symbols.text())
-        data_rate = subcarriers * bits_per_symbol * symbols_per_sec
-        ber = 0.5 * erfc(np.sqrt(snr_linear))
-        detection_prob = 1 - np.exp(-snr_linear / 10)
-
-        # --- Update KPI Sub-Tabs with Full Names and Improved Style ---
-        # Signal-to-Noise Ratio Tab
-        self.snr_label.setText(f"{snr_db:.2f} dB")
-        self.ax_snr.cla()
-        self.ax_snr.bar(["Signal-to-Noise Ratio"], [snr_db], color='skyblue')
-        self.ax_snr.set_ylim(0, snr_db * 1.2)
-        self.ax_snr.set_ylabel("dB")
-        self.ax_snr.set_title("Signal-to-Noise Ratio")
-        self.snr_canvas.draw()
-
-        # Peak-to-Side Lobe Ratio Tab
-        self.pslr_label.setText(f"{pslr_db:.2f} dB")
-        self.ax_pslr.cla()
-        self.ax_pslr.bar(["Peak-to-Side Lobe Ratio"], [pslr_db], color='salmon')
-        self.ax_pslr.set_ylim(0, pslr_db * 1.2 if pslr_db != np.inf else 10)
-        self.ax_pslr.set_ylabel("dB")
-        self.ax_pslr.set_title("Peak-to-Side Lobe Ratio")
-        self.pslr_canvas.draw()
-
-        # Data Rate Tab
-        self.data_rate_label.setText(f"{data_rate:.2f} bits/s")
-        self.ax_data_rate.cla()
-        self.ax_data_rate.bar(["Data Rate"], [data_rate], color='limegreen')
-        self.ax_data_rate.set_ylabel("bits/s")
-        self.ax_data_rate.set_title("Data Rate")
-        self.data_rate_canvas.draw()
-
-        # Bit Error Rate Tab
-        self.ber_label.setText(f"{ber:.2e}")
-        self.ax_ber.cla()
-        self.ax_ber.bar(["Bit Error Rate"], [ber], color='violet')
-        self.ax_ber.set_ylabel("BER")
-        self.ax_ber.set_title("Bit Error Rate")
-        self.ber_canvas.draw()
-
-        # Detection Probability Tab
-        self.dp_label.setText(f"{detection_prob:.2f}")
-        self.ax_dp.cla()
-        self.ax_dp.bar(["Detection Probability"], [detection_prob], color='orange')
-        self.ax_dp.set_ylim(0, 1)
-        self.ax_dp.set_ylabel("Probability")
-        self.ax_dp.set_title("Detection Probability")
-        self.dp_canvas.draw()
-
-    def transmit_waveform(self):
-        self.clear_results()
-        self.pluto_received = None  # Clear previous Pluto data
-        mode = self.combo_trans_mode.currentText()
-        if mode == "Burst":
-            self.generate_and_combine()
         elif mode == "Continuous":
             self.timer.start(5000)  # every 5000 ms (5 seconds)
         else:
@@ -582,9 +443,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return doppler_shifts, delays, ambg
 
     def analyze_performance(self):
-        # Do not clear the main page waveform plots; only clear performance plots
-        self.ax_range.cla()
-        self.ax_amb.cla()
         # Use Pluto received data if available, otherwise simulated joint waveform
         if self.pluto_received is not None:
             analysis_waveform = self.pluto_received
@@ -594,134 +452,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # --- Range Profile (Autocorrelation) ---
         autocorr = np.correlate(analysis_waveform, analysis_waveform, mode='full')
         lags = np.arange(-len(analysis_waveform) + 1, len(analysis_waveform))
-        self.ax_range.plot(lags, autocorr)
-        self.ax_range.set_title("Range Profile (Autocorrelation)")
-        self.ax_range.set_xlabel("Lag")
-        self.ax_range.set_ylabel("Correlation")
-        self.ax_range.grid(True)
-        self.canvas_range.draw()
-
-        # --- Ambiguity Function (3D Surface Plot) ---
-        fs = 20e6
-        doppler_shifts, delays, ambg = self.compute_ambiguity_function(self.lfm_time, self.lfm_waveform, fs, analysis_length=1000)
-        self.ax_amb.cla()
-        D, F = np.meshgrid(delays, doppler_shifts)
-        surf = self.ax_amb.plot_surface(D, F, ambg, cmap='viridis')
-        self.ax_amb.set_title("Ambiguity Function")
-        self.ax_amb.set_xlabel("Delay (s)")
-        self.ax_amb.set_ylabel("Doppler (Hz)")
-        self.ax_amb.set_zlabel("Correlation")
-        if len(self.fig_amb.axes) > 1:
-            self.fig_amb.delaxes(self.fig_amb.axes[-1])
-        self.fig_amb.colorbar(surf, ax=self.ax_amb, shrink=0.5, aspect=10)
-        self.canvas_amb.draw()
-
-        # --- KPIs ---
-        noise_variance = 0.01
-        signal_power = np.mean(np.abs(analysis_waveform)**2)
-        snr_linear = signal_power / noise_variance
-        snr_db = 10 * np.log10(snr_linear)
-        center_index = len(autocorr) // 2
-        main_peak = autocorr[center_index]
-        sidelobes = np.delete(autocorr, center_index)
-        max_sidelobe = np.max(sidelobes)
-        pslr_db = 20 * np.log10(main_peak / max_sidelobe) if max_sidelobe != 0 else np.inf
-        bits_per_symbol = {"BPSK": 1, "QPSK": 2, "16QAM": 4}[self.combo_ofdm_mod.currentText()]
-        subcarriers = int(self.edit_ofdm_subcarriers.text())
-        symbols_per_sec = float(self.edit_ofdm_symbols.text())
-        data_rate = subcarriers * bits_per_symbol * symbols_per_sec
-        ber = 0.5 * erfc(np.sqrt(snr_linear))
-        detection_prob = 1 - np.exp(-snr_linear / 10)
-
-        # --- Update KPI Sub-Tabs with Full Names and Improved Style ---
-        # Signal-to-Noise Ratio Tab
-        self.snr_label.setText(f"{snr_db:.2f} dB")
-        self.ax_snr.cla()
-        self.ax_snr.bar(["Signal-to-Noise Ratio"], [snr_db], color='skyblue')
-        self.ax_snr.set_ylim(0, snr_db * 1.2)
-        self.ax_snr.set_ylabel("dB")
-        self.ax_snr.set_title("Signal-to-Noise Ratio")
-        self.snr_canvas.draw()
-
-        # Peak-to-Side Lobe Ratio Tab
-        self.pslr_label.setText(f"{pslr_db:.2f} dB")
-        self.ax_pslr.cla()
-        self.ax_pslr.bar(["Peak-to-Side Lobe Ratio"], [pslr_db], color='salmon')
-        self.ax_pslr.set_ylim(0, pslr_db * 1.2 if pslr_db != np.inf else 10)
-        self.ax_pslr.set_ylabel("dB")
-        self.ax_pslr.set_title("Peak-to-Side Lobe Ratio")
-        self.pslr_canvas.draw()
-
-        # Data Rate Tab
-        self.data_rate_label.setText(f"{data_rate:.2f} bits/s")
-        self.ax_data_rate.cla()
-        self.ax_data_rate.bar(["Data Rate"], [data_rate], color='limegreen')
-        self.ax_data_rate.set_ylabel("bits/s")
-        self.ax_data_rate.set_title("Data Rate")
-        self.data_rate_canvas.draw()
-
-        # Bit Error Rate Tab
-        self.ber_label.setText(f"{ber:.2e}")
-        self.ax_ber.cla()
-        self.ax_ber.bar(["Bit Error Rate"], [ber], color='violet')
-        self.ax_ber.set_ylabel("BER")
-        self.ax_ber.set_title("Bit Error Rate")
-        self.ber_canvas.draw()
-
-        # Detection Probability Tab
-        self.dp_label.setText(f"{detection_prob:.2f}")
-        self.ax_dp.cla()
-        self.ax_dp.bar(["Detection Probability"], [detection_prob], color='orange')
-        self.ax_dp.set_ylim(0, 1)
-        self.ax_dp.set_ylabel("Probability")
-        self.ax_dp.set_title("Detection Probability")
-        self.dp_canvas.draw()
-
-    def transmit_waveform(self):
-        self.clear_results()
-        self.pluto_received = None  # Clear previous Pluto data
-        mode = self.combo_trans_mode.currentText()
-        if mode == "Burst":
-            self.generate_and_combine()
-        elif mode == "Continuous":
-            self.timer.start(5000)  # every 5000 ms (5 seconds)
-        else:
-            QtWidgets.QMessageBox.critical(self, "Error", "Unknown transmission mode.")
-
-    def continuous_transmission(self):
-        self.generate_and_combine()
-        if self.combo_trans_mode.currentText() == "Continuous":
-            self.analyze_performance()
-
-    def stop_transmission(self):
-        self.timer.stop()
-
-    def compute_ambiguity_function(self, t, waveform, fs, analysis_length=1000):
-        t_analysis = t[:analysis_length]
-        waveform_analysis = waveform[:analysis_length]
-        N = len(waveform_analysis)
-        delays = np.arange(-N + 1, N) / fs
-        doppler_shifts = np.linspace(-5000, 5000, 50)
-        ambg = np.zeros((len(doppler_shifts), len(delays)))
-        for i, fd in enumerate(doppler_shifts):
-            waveform_fd = waveform_analysis * np.exp(1j * 2 * np.pi * fd * t_analysis)
-            corr = np.abs(np.correlate(waveform_fd, waveform_analysis, mode='full'))
-            ambg[i, :] = corr / np.max(corr)
-        return doppler_shifts, delays, ambg
-
-    def analyze_performance(self):
-        # Do not clear main waveform plots; only clear performance plots
         self.ax_range.cla()
-        self.ax_amb.cla()
-        # Use Pluto received data if available, otherwise simulated joint waveform
-        if self.pluto_received is not None:
-            analysis_waveform = self.pluto_received
-        else:
-            analysis_waveform = self.joint_waveform
-
-        # --- Range Profile (Autocorrelation) ---
-        autocorr = np.correlate(analysis_waveform, analysis_waveform, mode='full')
-        lags = np.arange(-len(analysis_waveform) + 1, len(analysis_waveform))
         self.ax_range.plot(lags, autocorr)
         self.ax_range.set_title("Range Profile (Autocorrelation)")
         self.ax_range.set_xlabel("Lag")
@@ -731,17 +462,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # --- Ambiguity Function (3D Surface Plot) ---
         fs = 20e6
-        doppler_shifts, delays, ambg = self.compute_ambiguity_function(self.lfm_time, self.lfm_waveform, fs, analysis_length=1000)
-        self.ax_amb.cla()
+        doppler_shifts, delays, ambg = self.compute_ambiguity_function(
+            self.lfm_time, self.lfm_waveform, fs, analysis_length=1000)
+        # Clear the existing ambiguity figure instead of removing the tab
+        self.fig_amb.clf()
+        self.ax_amb = self.fig_amb.add_subplot(111, projection='3d')
         D, F = np.meshgrid(delays, doppler_shifts)
-        surf = self.ax_amb.plot_surface(D, F, ambg, cmap='viridis')
+        # Plot only the real part to avoid ComplexWarnings
+        surf = self.ax_amb.plot_surface(D, F, np.real(ambg), cmap='viridis')
         self.ax_amb.set_title("Ambiguity Function")
         self.ax_amb.set_xlabel("Delay (s)")
         self.ax_amb.set_ylabel("Doppler (Hz)")
         self.ax_amb.set_zlabel("Correlation")
-        if len(self.fig_amb.axes) > 1:
-            self.fig_amb.delaxes(self.fig_amb.axes[-1])
-        self.fig_amb.colorbar(surf, ax=self.ax_amb, shrink=0.5, aspect=10)
+        # Remove any existing colorbar robustly
+        if self.amb_colorbar is not None:
+            try:
+                if hasattr(self.amb_colorbar, 'ax') and self.amb_colorbar.ax is not None:
+                    self.fig_amb.delaxes(self.amb_colorbar.ax)
+                self.amb_colorbar = None
+            except Exception as e:
+                print("Error removing colorbar:", e)
+                self.amb_colorbar = None
+        self.amb_colorbar = self.fig_amb.colorbar(surf, ax=self.ax_amb, shrink=0.5, aspect=10)
         self.canvas_amb.draw()
 
         # --- KPIs ---
@@ -761,8 +503,6 @@ class MainWindow(QtWidgets.QMainWindow):
         ber = 0.5 * erfc(np.sqrt(snr_linear))
         detection_prob = 1 - np.exp(-snr_linear / 10)
 
-        # --- Update KPI Sub-Tabs with Full Names and Improved Style ---
-        # Signal-to-Noise Ratio Tab
         self.snr_label.setText(f"{snr_db:.2f} dB")
         self.ax_snr.cla()
         self.ax_snr.bar(["Signal-to-Noise Ratio"], [snr_db], color='skyblue')
@@ -771,7 +511,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_snr.set_title("Signal-to-Noise Ratio")
         self.snr_canvas.draw()
 
-        # Peak-to-Side Lobe Ratio Tab
         self.pslr_label.setText(f"{pslr_db:.2f} dB")
         self.ax_pslr.cla()
         self.ax_pslr.bar(["Peak-to-Side Lobe Ratio"], [pslr_db], color='salmon')
@@ -780,7 +519,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_pslr.set_title("Peak-to-Side Lobe Ratio")
         self.pslr_canvas.draw()
 
-        # Data Rate Tab
         self.data_rate_label.setText(f"{data_rate:.2f} bits/s")
         self.ax_data_rate.cla()
         self.ax_data_rate.bar(["Data Rate"], [data_rate], color='limegreen')
@@ -788,7 +526,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_data_rate.set_title("Data Rate")
         self.data_rate_canvas.draw()
 
-        # Bit Error Rate Tab
         self.ber_label.setText(f"{ber:.2e}")
         self.ax_ber.cla()
         self.ax_ber.bar(["Bit Error Rate"], [ber], color='violet')
@@ -796,7 +533,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_ber.set_title("Bit Error Rate")
         self.ber_canvas.draw()
 
-        # Detection Probability Tab
         self.dp_label.setText(f"{detection_prob:.2f}")
         self.ax_dp.cla()
         self.ax_dp.bar(["Detection Probability"], [detection_prob], color='orange')
@@ -805,34 +541,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ax_dp.set_title("Detection Probability")
         self.dp_canvas.draw()
 
-    def transmit_waveform(self):
-        self.clear_results()
-        self.pluto_received = None  # Clear previous Pluto data
-        mode = self.combo_trans_mode.currentText()
-        if mode == "Burst":
-            self.generate_and_combine()
-        elif mode == "Continuous":
-            self.timer.start(5000)  # every 5000 ms (5 seconds)
-        else:
-            QtWidgets.QMessageBox.critical(self, "Error", "Unknown transmission mode.")
-
-    def continuous_transmission(self):
-        self.generate_and_combine()
-        if self.combo_trans_mode.currentText() == "Continuous":
-            self.analyze_performance()
-
-    def stop_transmission(self):
-        self.timer.stop()
 
     def transmit_pluto(self):
         try:
             import adi
             import iio
             self.clear_results()  # Clear previous plots
-            # Generate the joint waveform (actual transmitted signal)
             self.generate_and_combine()
             iq_signal = self.joint_waveform.astype(complex)
-            # Scan for available PlutoSDR devices
             contexts = iio.scan_contexts()
             pluto_uri = None
             for uri, desc in contexts.items():
@@ -849,20 +565,17 @@ class MainWindow(QtWidgets.QMainWindow):
             sdr.tx_lo = center_freq
             sdr.rx_lo = center_freq
             sdr.tx_hardwaregain_chan0 = int(self.edit_pluto_tx_gain.text())
-            sdr.rx_rf_bandwidth = 6000000  # Example setting
+            sdr.rx_rf_bandwidth = 6000000
             sdr.tx_cyclic_buffer = True
 
-            # Transmit the joint waveform
             sdr.tx(iq_signal)
-            # Allow time for the signal to stabilize (1 second)
             QtCore.QThread.sleep(1)
-            # Receive data from PlutoSDR
             received_data = sdr.rx()
             sdr.tx_destroy_buffer()
             del sdr
 
             processed = np.convolve(np.real(received_data), np.ones(10)/10, mode='same')
-            self.pluto_received = processed  # Save for performance analysis
+            self.pluto_received = processed
             self.ax_pluto.cla()
             self.ax_pluto.plot(processed, label="Processed Received Signal", color='blue')
             self.ax_pluto.set_title("ADALM Pluto Received Signal")
@@ -871,7 +584,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ax_pluto.legend()
             self.canvas_pluto.draw()
 
-            # If continuous mode is selected for Pluto, schedule the next transmission
             if self.combo_trans_mode.currentText() == "Continuous":
                 QtCore.QTimer.singleShot(5000, self.transmit_pluto)
                 self.analyze_performance()
